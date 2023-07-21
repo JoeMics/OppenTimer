@@ -17,7 +17,7 @@ const _EVERY_15_MINUTES = 1000 * 60 * 15;
 const _EVERY_HOUR = 1000 * 60 * 60;
 
 // Interval for how often to check Cineplex for movie times
-const INTERVAL = _EVERY_15_MINUTES; // 1 hour
+const INTERVAL = _EVERY_10_SECONDS; // 1 hour
 
 console.log(
   "Checking for movie times every",
@@ -28,6 +28,8 @@ console.log(
 interface Session {
   showStartDateTime: Date;
   seatsRemaining: number;
+  seatMapUrl: string;
+  deeplinkUrl: string; // This takes you to the ticket purchase page
 }
 
 interface Experience {
@@ -75,14 +77,22 @@ const oppenTimer = async () => {
   return showTimes;
 };
 
-const logResponse = (showTimes: ShowTimes) => {
+
+/**
+ * Logs a message with a timestamp
+ */
+const tsLog = (message: string) => {
   const logDateFormat = "yyyy-MM-dd h:mm:ss a";
-
   const logDate = bgBlue(format(new Date(), logDateFormat, null));
+  console.log(logDate, "-", message);
+};
 
+const logDivider = () => tsLog("-".repeat(50));
+
+const logResponse = (showTimes: ShowTimes) => {
   if (!showTimes.length) {
     const message = "No theatre data available";
-    return console.log(logDate, "-", message);
+    return tsLog(message);
   }
 
   const langleyTheatre = showTimes[0];
@@ -90,7 +100,7 @@ const logResponse = (showTimes: ShowTimes) => {
 
   if (!movies.length) {
     const message = "No movie data available";
-    return console.log(logDate, "-", message);
+    return tsLog(message);
   }
 
   const movie = movies[0];
@@ -104,7 +114,7 @@ const logResponse = (showTimes: ShowTimes) => {
 
   if (!imaxExperience) {
     const message = "No imax experience available";
-    return console.log(logDate, "-", message);
+    return tsLog(message);
   }
 
   const sessions = imaxExperience.sessions;
@@ -121,14 +131,14 @@ const logResponse = (showTimes: ShowTimes) => {
     const seatsRemaining = red(String(session.seatsRemaining));
 
     const message = `${movieName} at ${date} seats remaining: ${seatsRemaining}`;
-    console.log(logDate, "-", message);
+    tsLog(message);
+    tsLog("Seat map: " + brightBlue(session.seatMapUrl));
+    tsLog("Ticket link: " + brightBlue(session.deeplinkUrl));
+    logDivider();
   }
 
   // terminal bell
   Deno.stdout.write(new TextEncoder().encode("\x07"));
-
-  const message = `Movie Link: ${brightBlue(movieUrl)}`;
-  console.log(logDate, "-", message);
 };
 
 export const logMovieTimes = async () => {
